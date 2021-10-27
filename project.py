@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import requests
 import json
+import unicodedata
 
 CONSUMER_KEY = os.environ['TW_API_KEY']
 CONSUMER_SECRET = os.environ['TW_API_SECRET_KEY']
@@ -66,29 +67,50 @@ def remove_emoji(string):
                            "]+", flags=re.UNICODE)
     return emoji_pattern.sub(r'', string)
 
- # Replace with your own search query
-#query = '(squid game) OR (juego calamar) OR (netflix calamar) (lang:es -is:retweet -has:media)'
+def remove_accents(input_str):
+    nfkd_form = unicodedata.normalize('NFKD', input_str)
+    return u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
+
+# context_annotatios tienen la forma: (como se repiten no lo voy a tomar)
+# "context_annotations": [{"domain": {"id": "3", "name": "TV Shows",
+# "description": "Television shows from around the world"},
+# "entity": {"id": "1437413779755597824", "name": "Squid Game"}}]}
 query = 'juego calamar lang:es -(has:media) -is:retweet'
-# Name and path of the file where you want the Tweets written to
 file_name = 'tweets_squid.txt'
+# Name and path of the file where you want the Tweets written to
 
-with open(file_name, 'a+') as f:
-    for tweet in tw.Paginator(client.search_recent_tweets, query=query,
-                                  tweet_fields=['context_annotations', 'created_at'], max_results=10).flatten(
-            limit=10):
-        text = remove_emoji(tweet.text.replace('\n',' '))
-        data = {
-            "text": text,
-            "created_at": str(tweet.created_at),
-            "id": tweet.id,
-            "context_annotations": tweet.context_annotations,
-        }
-        json.dump(data, f)
-        f.write("\n")
-        #f.write(f"{tweet.text}\n{tweet.created_at}\n{tweet.id}\n{tweet.context_annotations}\n-\n")
+def get_tweets(query, file_name, limit=10):
+    with open(file_name, 'a+') as f:
+        for tweet in tw.Paginator(client.search_recent_tweets, query=query,
+                                    tweet_fields=['context_annotations', 'created_at'], max_results=10).flatten(
+                limit=limit):
+            text = remove_emoji(remove_accents(tweet.text.replace('\n',' ')))
+            data = {
+                "text": text,
+                "created_at": str(tweet.created_at),
+                "id": tweet.id,
+                #"context_annotations": tweet.context_annotations,
+            }
+            json.dump(data, f)
+            f.write("\n")
+            #f.write(f"{tweet.text}\n{tweet.created_at}\n{tweet.id}\n{tweet.context_annotations}\n-\n")
 
-#words = "infumable absurdo absurda mal malisimo pesimo horrible mala malita fea malisima gusta buena zarpada sarpada buenisima verla tremenda locura".split(' ')
-#
-#with open('data.txt') as json_file:
-#    data = json.load(json_file)
-#    
+
+def extract_tweets(input_file, output_file):
+    with open(output_file, 'a+') as f:
+        # JSON file
+        r = open(input_file, "r")
+        
+        # Reading from file
+        Lines = r.readlines()
+        count = 0
+        # Strips the newline character
+        for line in Lines:
+            count += 1
+            data = json.loads(line)
+            f.write(remove_emoji(remove_accents(data['text']))+"\n")
+
+        #print(data['text'])
+
+#get_tweets(query, file_name, limit=100)
+extract_tweets(file_name,"tweets3.txt")
