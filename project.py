@@ -47,7 +47,6 @@ with open('tweets.txt', 'w') as f:
 client = tw.Client(bearer_token=BEARER_TOKEN)
 
 # Replace with your own search query
-query = 'from:suhemparack -is:retweet'
 
 
 #Para poder acceder a all tweet necesito academic research, si no, no me deja
@@ -76,24 +75,22 @@ def remove_accents(input_str):
 # "description": "Television shows from around the world"},
 # "entity": {"id": "1437413779755597824", "name": "Squid Game"}}]}
 query = 'juego calamar lang:es -(has:media) -is:retweet'
-file_name = 'tweets_squid.txt'
+file_name = 'tweets_squid2.txt'
 # Name and path of the file where you want the Tweets written to
 
 def get_tweets(query, file_name, limit=10):
     with open(file_name, 'a+') as f:
         for tweet in tw.Paginator(client.search_recent_tweets, query=query,
-                                    tweet_fields=['context_annotations', 'created_at'], max_results=10).flatten(
+                                    tweet_fields=['created_at'], max_results=100).flatten(
                 limit=limit):
             text = remove_emoji(remove_accents(tweet.text.replace('\n',' ')))
             data = {
                 "text": text,
                 "created_at": str(tweet.created_at),
                 "id": tweet.id,
-                #"context_annotations": tweet.context_annotations,
             }
             json.dump(data, f)
             f.write("\n")
-            #f.write(f"{tweet.text}\n{tweet.created_at}\n{tweet.id}\n{tweet.context_annotations}\n-\n")
 
 
 def extract_tweets(input_file, output_file):
@@ -109,8 +106,19 @@ def extract_tweets(input_file, output_file):
             count += 1
             data = json.loads(line)
             f.write(remove_emoji(remove_accents(data['text']))+"\n")
+    open(input_file, 'w').close()
 
-        #print(data['text'])
+def pass_tweets(input_file,output_file='tweets.txt'):
+    with open(input_file, 'r+') as f:
+        fileoutput = f.readlines()
+        f.truncate(0)
+    with open(output_file, "a+") as f1:
+        for line in fileoutput:
+            f1.write(line)
+            f1.flush()
 
-#get_tweets(query, file_name, limit=100)
-extract_tweets(file_name,"tweets3.txt")
+
+
+get_tweets(query, file_name, limit=1000)
+extract_tweets(file_name,"tweets_new.txt")
+pass_tweets("tweets_new.txt")
