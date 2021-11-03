@@ -82,9 +82,10 @@ query = '-(RT) juego calamar lang:es -(has:media)'
 date_since = "202101010000"
 date_until = "202110150000"
 file_name = "old_tweets.txt"
-get_old_tweets(query, file_name, date_since, date_until, limit=10000)
-extract_tweets(file_name,"old_tweets_new.txt")
-pass_tweets("old_tweets_new.txt", "old_tweets.txt")
+
+#get_old_tweets(query, file_name, date_since, date_until, limit=10000)
+#extract_tweets(file_name,"old_tweets_new.txt")
+#pass_tweets("old_tweets_new.txt", "old_tweets.txt")
 
 
 
@@ -118,6 +119,6 @@ def get_tweets(query, file_name, limit=10):
             f.write("\n")
 
 
-#get_tweets(query, file_name, limit=100)
-#extract_tweets(file_name,"tweets_new.txt")
-#pass_tweets("tweets_new.txt")
+get_tweets(query, file_name, limit=1000)
+extract_tweets(file_name,"tweets_new.txt")
+pass_tweets("tweets_new.txt")
