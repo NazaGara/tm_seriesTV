@@ -31,13 +31,9 @@ def remove_accents(input_str):
 
 def extract_tweets(input_file, output_file):
     with open(output_file, 'a+') as f:
-        # JSON file
         r = open(input_file, "r")
-        
-        # Reading from file
         Lines = r.readlines()
         count = 0
-        # Strips the newline character
         for line in Lines:
             count += 1
             data = json.loads(line)
@@ -58,10 +54,6 @@ def pass_tweets(input_file, output_file='tweets.txt'):
 # "context_annotations": [{"domain": {"id": "3", "name": "TV Shows",
 # "description": "Television shows from around the world"},
 # "entity": {"id": "1437413779755597824", "name": "Squid Game"}}]}
-
-# ------------------------------------------------------------------------------------------
-
-
 
 auth = tw.AppAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 api = tw.API(auth, wait_on_rate_limit=True)
@@ -88,21 +80,16 @@ file_name = "old_tweets.txt"
 #pass_tweets("old_tweets_new.txt", "old_tweets.txt")
 
 
-
 # ------------------------------------------------------------------------------------------
 
 auth = tw.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-#auth.set_access_token(access_token, access_token_secret)
 api = tw.API(auth, wait_on_rate_limit=True)
 client = tw.Client(bearer_token=BEARER_TOKEN)
 
 
-
 # Buscar con Hashtags 
-
 query = 'juego calamar lang:es -(has:media) -is:retweet'
 file_name = 'tweets_squid2.txt'
-# Name and path of the file where you want the Tweets written to
 
 def get_tweets(query, file_name, limit=10):
     with open(file_name, 'a+') as f:
