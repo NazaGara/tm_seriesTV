@@ -3,9 +3,6 @@
 import os
 import tweepy as tw
 import spacy
-import pandas as pd
-import numpy as np
-import requests
 import json
 import unicodedata
 
@@ -49,11 +46,7 @@ def pass_tweets(input_file, output_file='tweets.txt'):
             f1.write(line)
             f1.flush()
 
-
-# context_annotatios tienen la forma: (como se repiten no lo voy a tomar)
-# "context_annotations": [{"domain": {"id": "3", "name": "TV Shows",
-# "description": "Television shows from around the world"},
-# "entity": {"id": "1437413779755597824", "name": "Squid Game"}}]}
+# ----------------------------------------------------------------
 
 auth = tw.AppAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 api = tw.API(auth, wait_on_rate_limit=True)
@@ -86,8 +79,6 @@ auth = tw.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 api = tw.API(auth, wait_on_rate_limit=True)
 client = tw.Client(bearer_token=BEARER_TOKEN)
 
-
-# Buscar con Hashtags 
 query = 'juego calamar lang:es -(has:media) -is:retweet'
 file_name = 'tweets_squid2.txt'
 
@@ -106,6 +97,6 @@ def get_tweets(query, file_name, limit=10):
             f.write("\n")
 
 
-get_tweets(query, file_name, limit=1000)
-extract_tweets(file_name,"tweets_new.txt")
-pass_tweets("tweets_new.txt")
+#get_tweets(query, file_name, limit=1000)
+#extract_tweets(file_name,"tweets_new.txt")
+#pass_tweets("tweets_new.txt")

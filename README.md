@@ -81,4 +81,4 @@ En un primer intento se intento utilizar el algoritmo de K-Nearest Neighbors par
 [MIT](https://choosealicense.com/licenses/mit/)
 
 ## Alumno
-- Garagiola, Nazareno
+Garagiola, Nazareno
