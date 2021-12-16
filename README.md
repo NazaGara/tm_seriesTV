@@ -41,7 +41,7 @@ Pre-Processing -> Sentiment Analysis -> Vectorization -> Clustering -> Extractio
 
 Hasta la etapa de Clustering, el modo de trabajo fue muy similar al del practico de Clustering, con la gran diferencia de que esta vez, agrupamos documentos (tweets) en vez de palabras, por lo que pude utilizar [CountVectorizer](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html). Al mismo tiempo que nosotros trabajamos con cada tweet, tambien procese los datos usando un Word Embedding de FastText de 100 dimensiones entrenado con informacion de Twitter, para luego poder comparar los resultados entre ambas versiones.
 
-### Pre-Processing
+### Pre procesamiento
 
 Una vez que ya tenia todos los tweets, el preprocesamiento de los tweets consistio de:
 
@@ -65,13 +65,46 @@ Usando embeddings:
 ![embeddings](https://imgur.com/V5zktXE.png)
 
 
-### Extraction and Model Training
+### Extraccion de datos y entrenamiento
 
 Hasta este momento, tenia en claro como trabajar y que pasos iba a realizar. Desde la etapa de extraccion probe diferentes formas de poder llegar al objetivo, hare mencion de aquellas mas relevantes.
 
 En un primer intento se intento utilizar el algoritmo de K-Nearest Neighbors para poder predecir, la idea era la de aplicar KNN en los distintos clusters y taggear manualmente cada centroide con un sentimiento y la razon del mismo. Pero esta version se descarto por el desgaste de hacerlo manualmente y que convenia mas aplicar en el preprocesamiento un analisis al sentimiento de cada tweet.
 
-### Predictions
+#### PMI
+La siguiente idea fue utilizar una version de [Pointwise Mutual Information](https://en.wikipedia.org/wiki/Pointwise_mutual_information) especifica para la situacion que tenemos, tal que en cada cluster se puedan identificar las palabras que mas reflejen un sentimiento. Es decir, dentro de un conjunto de datos (todo el dataset o solo un cluster) poder aplicar la formula:
+
+![PMI](https://imgur.com/SUkc17C.png)
+
+Para la implementacion en codigo, necesito de una serie de colecciones para cada cluster y contadores de palabras para diferentes Dataframes, junto con un minimo de cantidad de veces que aparezca una palabra en el conjunto de datos.
+
+```python
+pmi = {}
+for w in sent_counter:
+    pmi[w] = np.log2(sent_counter[w]/(counter[w] * amount_of_sent_on_df))
+Counter(pmi)
+```
+
+Finalmente, solo nos quedamos con las 5 palabras mas significantes de cada sentimiento para cada cluster, por ejemplo:
+
+| Sentimiento   | word1         | word2  | word3 | word4 | word 5|
+| ------------- |:-------------:| ------:|------:|------:|------:|
+| NEU           | preocupaciones | licey | distrito | confirman | 10nov |
+| POS           | unirme | commerce | encanto | recomiendo | encanta |
+| NEG           | derrumba | sobrevalorado | horrible | harta | cojones |
+
+son las palabras obtenidas considerando todos los tweets, con un minimo de que cada palabra aparezca al menos 20 veces.
+
+#### LDA
+
+Junto con las palabras que nos dan una nocion de cada sentimiento, tambien aplicamos una version de [LDA](https://github.com/bmabey/pyLDAvis) (la cual es mas interactiva) para poder identificar topicos y temas dentro de los tweets. El objetivo de esto, es poder ir mas alla de la clasficiacion de sentimiento habitual, y encontrar sobre que tema se trata cada tweet.
+
+
+![LDAvis](https://imgur.com/bN5Hgnu.png)
+
+Si combinamos la informacion que extraemos usando PMI y LDA de la forma descrita, tenemos palabras que representan sentimientos y palabras que son mas significativas para cada conjunto de datos (cada Cluster o todo el Dataset).
+
+### Predicciones
 
 ## Resultados
 
