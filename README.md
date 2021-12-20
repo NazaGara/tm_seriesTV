@@ -2,6 +2,22 @@
 
 Repositorio correspondiente al proyecto final de la materia Text-Mining del año 2021 de la carrera de Licenciatura en Ciencias de la Computación en FaMAF - UNC.
 
+
+<!-- TABLE OF CONTENTS -->
+<details open="open">
+  <summary><h2 style="display: inline-block">Tabla de contenidos</h2></summary>
+  <ul>
+    <li><a href="#instalacion">Instalacion</a></li>
+    <li><a href="#uso">Uso</a></li>
+    <li><a href="#objetivo">Objetivo</a></li>
+    <li><a href="#metodologia">Metodologia</a></li>
+    <li><a href="#resultados">Resultados</a></li>
+    <li><a href="#licencia">Licencia</a></li>
+    <li><a href="#contacto">Contacto</a></li>
+  </ul>
+</details>
+
+
 ## Instalacion
 
 Clonamos el repositorio:
@@ -33,7 +49,7 @@ Obtuve tweets utilizando la API de Twitter, con el impedimento de poder sacar so
 
 Cuando llegue al numero de 19717 tweets, deje de buscar por nuevos datos y fije el corpus.
 
-## Metodologia de trabajo
+## Metodologia
 
 El acercamiento que tuve para desarrollar el proyecto fue el siguiente:
 
@@ -41,7 +57,7 @@ Pre-Processing -> Sentiment Analysis -> Vectorization -> Clustering -> Extractio
 
 Hasta la etapa de Clustering, el modo de trabajo fue muy similar al del practico de Clustering, con la gran diferencia de que esta vez, agrupamos documentos (tweets) en vez de palabras, por lo que pude utilizar [CountVectorizer](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html). Al mismo tiempo que nosotros trabajamos con cada tweet, tambien procese los datos usando un Word Embedding de FastText de 100 dimensiones entrenado con informacion de Twitter, para luego poder comparar los resultados entre ambas versiones.
 
-### Pre procesamiento
+### Pre-procesamiento
 
 Una vez que ya tenia todos los tweets, el preprocesamiento de los tweets consistio de:
 
@@ -95,23 +111,88 @@ Finalmente, solo nos quedamos con las 5 palabras mas significantes de cada senti
 
 son las palabras obtenidas considerando todos los tweets, con un minimo de que cada palabra aparezca al menos 20 veces.
 
+y por ejempo, si fijamos el cluster 2 obtenidos usando los embeddings (sin perdida de generalidad), obtenemos las siguientes palabras, con un minimo de 5 veces:
+
+| Sentimiento   | palabra 1  | palabra 2  | palabra 3 | palabra 4 | palabra  5|
+| ------------- |:-------------:| ------:|------:|------:|------:|
+| NEU           | hwang | dong | hyuk | revelo | segun |
+| POS           | ganador | basado | exitosa | historia | gente |
+| NEG           | cae | dolar | millonaria | creadores | muertos |
+
 #### LDA
 
 Junto con las palabras que nos dan una nocion de cada sentimiento, tambien aplicamos una version de [LDA](https://github.com/bmabey/pyLDAvis) (la cual es mas interactiva) para poder identificar topicos y temas dentro de los tweets. El objetivo de esto, es poder ir mas alla de la clasficiacion de sentimiento habitual, y encontrar sobre que tema se trata cada tweet.
-
 
 ![LDAvis](https://imgur.com/bN5Hgnu.png)
 
 Si combinamos la informacion que extraemos usando PMI y LDA de la forma descrita, tenemos palabras que representan sentimientos y palabras que son mas significativas para cada conjunto de datos (cada Cluster o todo el Dataset).
 
+Para el caso del dataset, por ejemplo, asique podemos ver las palabras que denoten topicos para los casos que vimos las palabras de sentimiento.
+
+| Caso      | palabra 1  | palabra 2  | palabra 3 | palabra 4 | palabra  5|
+| --------- |:-------------:| ------:|------:|------:|------:|
+| Topicos 0 | disfraces | serie | visto | halloween | mas |
+| Topicos 1 | casa | criptomoneda | papel | millones | estafa |
+| Topicos 2 | gente | vi | mas | viendo | capitulo |
+| Topicos 3 | mas | bien | series | gusto | serie |
+| Topicos 4 | ninos | serie | anos | disfrazados | jugando |
+| Topicos 5 | serie | netflix | temporada | creador | mas |
+| Topicos 6 | disfraz | halloween | muneca | fiesta | personas |
+
+Para el caso del 2° cluster, tenemos:
+
+| Caso      | palabra 1  | palabra 2  | palabra 3 | palabra 4 | palabra  5|
+| --------- |:-------------:| ------:|------:|------:|------:|
+| Topicos 0 | video | final |serie | creador |vi |
+| Topicos 1 | mas | serie |fiesta | anos |netflix |
+| Topicos 2 | criptomoneda | inspirada |estafa | criptodivisa |dias |
+| Topicos 3 | casa | papel |disfraz | halloween |disfraces |
+| Topicos 4 | serie | netflix |exito | creador |pese |
+| Topicos 5 | luz | gente |visto | historia |verde |
+| Topicos 6 | muneca | temporada |corea | creador |sur |
+
+Si desamos ver toda la informacion que tenemos sobre cada conjunto de datos, podemos ejecutar la celda que contiene:
+```py
+for k in wv_pmi_lda:
+    print(f"-----{k}-----")
+    display(wv_pmi_lda[k][0],wv_pmi_lda[k][1],wv_pmi_lda[k][2],wv_pmi_lda[k][3])
+```
+
 ### Predicciones
+
+TO DO: 
+
+- Agregar lo de la implementacion de como identificar sentimiento vs usar el valor obtenido por pysentimiento
+- Destacar la precision y el recall, de como anda para cada caso
 
 ## Resultados
 
+TO DO:
+
+- Destacar que es mejor cluster vs dataset vs pysentimiento
+- Concluir, mostrar ejemplos y mostrar cuantitativamente cual anda mejor y con cuanta precision
+
 ### Trabajo futuro
+
+Como funcionalidades que me hubiese gustado abarcar pero por tiempo y fines del trabajo no pude concretar son:
+
+-   Identificar Tweets con mayor precision.
+    
+    Poder dedicar mas tiempo a lo que respecta a information retrieval.
+
+- Generalizar el modelo para poder buscar sobre diferentes temas de opiniones o tendencias en la red.
+
+    Hacer crecer para que mas rapidamente se detecten los tweets y se ejecute el modelo.
+
+- Probar con entrenar con tweets genericos: 
+    
+    Usar tweets objetivamente neutrales, positivos o negativos y ver si funciona para diferentes temas, sin usar terminos especificos de cada tendencia.
 
 ## Licencia
 [MIT](https://choosealicense.com/licenses/mit/)
 
-## Alumno
-Garagiola, Nazareno
+## Contacto
+* Garagiola, Nazareno
+* [Twitter](https://twitter.com/nazagara99)
+* [Mail](nazagara1277@gmail.com)
+* [LinkedIn](https://www.linkedin.com/in/nazareno-garagiola/)
