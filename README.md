@@ -158,12 +158,67 @@ for k in wv_pmi_lda:
     display(wv_pmi_lda[k][0],wv_pmi_lda[k][1],wv_pmi_lda[k][2],wv_pmi_lda[k][3])
 ```
 
-### Predicciones
+### Predicciones y Modelos
 
-TO DO: 
+Para poder predecir el sentimiento de nuevos tweets, utilizo la implementacion de la [Regresion Logistica](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html) y tener clasificadores para cada uno de los clusters y para el todo el corpus. En cada clasificador el input es un vector (obtenido a partir del tweet nuevo) con ciertas dimensiones y me devuelve el label correspondiente al sentimiento relacionado.
 
-- Agregar lo de la implementacion de como identificar sentimiento vs usar el valor obtenido por pysentimiento
-- Destacar la precision y el recall, de como anda para cada caso
+Lo bueno de tener 1 clasificador general y uno para cada cluster es que puedo predecir dos valores de sentimiento, uno obtenido por el clasificador de todo el dataset y otro segun los topicos del que trate el nuevo tweet. Entonces, con la lista de palabras obtenidas usando LDA puedo identificar sobre que topico habla un nuevo tweet, seleccionar el cluster de dicha lista, y predecir usando el clasificador de ese cluster.
+
+```py
+# en la funcion predict
+        cluster, topic = get_cluster(processed_tw)
+#...
+topics_list = []
+for k in wv_pmi_lda: 
+    if k!='dataset': topics_list.append(wv_pmi_lda[k][0])
+    
+def get_cluster(tweet):
+    topic_values = []
+
+    for t in topics_list:
+        topic_values.append(int(identify_topic(tweet, t)))
+
+    if topic_values == [0 for _ in range(len(topics_list))]: #que no ocurre nunca en la lista de topicos
+        cluster, topics = "dataset", "Using dataset configuration, we dont have the topics related"
+    else:
+        cluster = topic_values.index(max(topic_values))
+        topics = topics_list[cluster][max(topic_values)]
+
+    return cluster, topics
+```
+
+Una de las cosas que hay que destacar, es que para entrenar el modelo  con el objetivo de predecir sentimiento hay dos formas de tomar las labels de los vectores de entrenamiento, una es usando directamente el valor obtenido al comienzo cuando analizamos con PySentimiento o la otra forma, es utilizar las palabras obtenidas con LDA para cada conjunto de datos. Por lo que para poder realizar esta segunda opcion, hubo que implementar una nueva funcion para identificar sentimiento de una lista de tweets:
+
+```py
+def identify_sentiment(tweet_list, sentiments_list):
+    y = np.empty(0)
+    labels = {0: 'NEU', 1: 'POS', 2: 'NEG'}
+    for tw in tweet_list:
+        counts = [0 for _ in range(len(sentiments_list))]
+        for i in range(len(sentiments_list)):
+            c = 0
+            for w in sentiments_list[i]:
+                c += count_subwords(tw, w)
+            counts[i] = c
+        y = np.append(y, labels[counts.index(max(counts))])
+    return y
+```
+
+Y luego, en la funcion para crear y evaluar cada modelo llamamos a esta funcion para etiquetar cada tweet que estaba en cada conjunto de datos, con el fin de poder entrenar el modelo con estas etiquetas.
+
+
+#### Metricas
+
+En la notebook podemos ver que luego de crear y entrenar cada modelo, tambien tenemos para poder revisar algunas metricas de cada uno, por ejemplo:
+`Df dataset. Report: {'NEG': {'precision': 0.0, 'recall': 0.0, 'f1-score': 0.0, 'support': 48}, 'NEU': {'precision': 0.9858613800522514, 'recall': 1.0, 'f1-score': 0.9928803590775422, 'support': 6415}, 'POS': {'precision': 0.0, 'recall': 0.0, 'f1-score': 0.0, 'support': 44}, 'accuracy': 0.9858613800522514, 'macro avg': {'precision': 0.3286204600174171, 'recall': 0.3333333333333333, 'f1-score': 0.3309601196925141, 'support': 6507}, 'weighted avg': {'precision': 0.9719226606785298, 'recall': 0.9858613800522514, 'f1-score': 0.9788424010269607, 'support': 6507}} `
+
+Donde podemos ver que tenemos una [precision](https://en.wikipedia.org/wiki/Precision_and_recall#Precision) general del 98.9% pero un [recall](https://en.wikipedia.org/wiki/Precision_and_recall#Recall) (exhaustividad o sensibilidad) nulas para las clases POS y NEG, lo cual quiere decir que el modelo practicamente predice siempre NEU, lo cual ocurre por el gran volumen de tweets neutrales en comparacion con las demas clases.
+
+
+En otro caso tenemos:
+`Df 2. Report: {'NEG': {'precision': 0.9, 'recall': 0.8181818181818182, 'f1-score': 0.8571428571428572, 'support': 11}, 'NEU': {'precision': 0.9736070381231672, 'recall': 0.9458689458689459, 'f1-score': 0.9595375722543353, 'support': 351}, 'POS': {'precision': 0.3333333333333333, 'recall': 0.5625, 'f1-score': 0.4186046511627907, 'support': 16}, 'accuracy': 0.9259259259259259, 'macro avg': {'precision': 0.7356467904855002, 'recall': 0.7755169213502547, 'f1-score': 0.7450950268533277, 'support': 378}, 'weighted avg': {'precision': 0.9443635018903835, 'recall': 0.9259259259259259, 'f1-score': 0.9336612002868989, 'support': 378}}`
+
+Tenemos una precision promedio del 73% y valores de recall del 81% para clase NEG, 94% para NEU y 56% para POS. Lo cual nos da a entender de que los clasificadores de los clusters estan mejor distribuidos en comparacion con el clasificador general, y que pueden predecir correcatamente y no solo un valor por defecto.
 
 ## Resultados
 
@@ -193,6 +248,6 @@ Como funcionalidades que me hubiese gustado abarcar pero por tiempo y fines del 
 
 ## Contacto
 * Garagiola, Nazareno
-* [Twitter](https://twitter.com/nazagara99)
-* [Mail](nazagara1277@gmail.com)
 * [LinkedIn](https://www.linkedin.com/in/nazareno-garagiola/)
+* [Mail](nazagara1277@gmail.com)
+* [Twitter](https://twitter.com/nazagara99)
