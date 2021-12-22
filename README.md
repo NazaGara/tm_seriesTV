@@ -55,21 +55,21 @@ El acercamiento que tuve para desarrollar el proyecto fue el siguiente:
 
 Pre-Processing -> Sentiment Analysis -> Vectorization -> Clustering -> Extraction -> Model Training -> Prediction
 
-Hasta la etapa de Clustering, el modo de trabajo fue muy similar al del practico de Clustering, con la gran diferencia de que esta vez, agrupamos documentos (tweets) en vez de palabras, por lo que pude utilizar [CountVectorizer](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html). Al mismo tiempo que nosotros trabajamos con cada tweet, tambien procese los datos usando un Word Embedding de FastText de 100 dimensiones entrenado con informacion de Twitter, para luego poder comparar los resultados entre ambas versiones.
+Hasta la etapa de Clustering, el modo de trabajo fue muy similar al del practico de Clustering, con la gran diferencia de que esta vez, agrupamos documentos (tweets) en vez de palabras, por lo que pude utilizar [CountVectorizer](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html). Al mismo tiempo que nosotros trabajamos con cada tweet, tambien procese los datos usando un Word Embedding de FastText de 100 dimensiones entrenado con informacion de Twitter, para luego poder comparar los resultados entre ambas versiones. 
+[Link para descargar el embedding](https://drive.google.com/file/d/1h_ncLs_ZmdE1K0_AgghzCxqzfH1GjtP1/view?usp=sharing)
 
 ### Pre-procesamiento
 
 Una vez que ya tenia todos los tweets, el preprocesamiento de los tweets consistio de:
 
 - Eliminar stopwords y URLs
-- Eliminar signos de puntuacion y simbolo '@'
+- Eliminar signos de puntuacion y palabras que comienzan con '@'
 - Descartar palabras que tengan una frecuencia menor a 80
 - Aplicar reduccion de dimensionalidad mediante la varianza de los datos
-- Identificar sentimiento de cada tweet mediante la libreria: [PySentimiento](https://github.com/pysentimiento/pysentimiento)
+- Identificar sentimiento de cada tweet usando la libreria: [PySentimiento](https://github.com/pysentimiento/pysentimiento)
 
-Con esta limpieza de los datos, ahora si ya podiamos vectorizar y obtener una matriz de datos con la cual trabajar. Hay que hacer notar, que la vectorizacion de los datos y en el clustering no utilizo el sentimiento de cada tweet.
-
-Por lo que al final de la etapa de clustering, tenemos 20 clusters de tweets, los cuales se agruparon por su semejanza, no por su sentimiento, por lo que en cada cluster podemos tener tweets con diferentes sentimientos, lo cual usamos para la parte de extraccion y entrenamiento del modelo.
+Con esta limpieza de los datos, ahora si ya podemos vectorizar y obtener una matriz de datos con la cual trabajar. Notar que en la vectorizacion de los datos y el clustering no se usan los sentimientos de cada tweet.
+Por lo que al final de la etapa de clustering, tenemos 20 clusters de tweets, los cuales se agruparon por su semejanza, no por su sentimiento, entonces en cada cluster podemos tener tweets con diferentes sentimientos, lo cual usamos para la parte de extraccion y entrenamiento del modelo.
 
 Tenemos entonces, dos versiones de Clusters, una dada por la vectorizacion mas manual y otra por la realizada con el Embedding:
 
@@ -82,7 +82,6 @@ Usando embeddings:
 
 
 ### Extraccion de datos y entrenamiento
-
 Hasta este momento, tenia en claro como trabajar y que pasos iba a realizar. Desde la etapa de extraccion probe diferentes formas de poder llegar al objetivo, hare mencion de aquellas mas relevantes.
 
 En un primer intento se intento utilizar el algoritmo de K-Nearest Neighbors para poder predecir, la idea era la de aplicar KNN en los distintos clusters y taggear manualmente cada centroide con un sentimiento y la razon del mismo. Pero esta version se descarto por el desgaste de hacerlo manualmente y que convenia mas aplicar en el preprocesamiento un analisis al sentimiento de cada tweet.
@@ -120,7 +119,6 @@ y por ejempo, si fijamos el cluster 2 obtenidos usando los embeddings (sin perdi
 | NEG           | cae | dolar | millonaria | creadores | muertos |
 
 #### LDA
-
 Junto con las palabras que nos dan una nocion de cada sentimiento, tambien aplicamos una version de [LDA](https://github.com/bmabey/pyLDAvis) (la cual es mas interactiva) para poder identificar topicos y temas dentro de los tweets. El objetivo de esto, es poder ir mas alla de la clasficiacion de sentimiento habitual, y encontrar sobre que tema se trata cada tweet.
 
 ![LDAvis](https://imgur.com/bN5Hgnu.png)
@@ -178,7 +176,7 @@ def get_cluster(tweet):
     for t in topics_list:
         topic_values.append(int(identify_topic(tweet, t)))
 
-    if topic_values == [0 for _ in range(len(topics_list))]: #que no ocurre nunca en la lista de topicos
+    if topic_values == [0 for _ in range(len(topics_list))]:
         cluster, topics = "dataset", "Using dataset configuration, we dont have the topics related"
     else:
         cluster = topic_values.index(max(topic_values))
@@ -206,36 +204,93 @@ def identify_sentiment(tweet_list, sentiments_list):
 
 Y luego, en la funcion para crear y evaluar cada modelo llamamos a esta funcion para etiquetar cada tweet que estaba en cada conjunto de datos, con el fin de poder entrenar el modelo con estas etiquetas.
 
+Algo para notar, es que para poder entrenar los clasificadores, tuve que seleccionar a mano 3 tweets, uno de cada una de las clases de sentimiento. Esto para asegurarme que se realize el entrenamiento de cada clasificador, que es necesario que tengan diferentes clases para hacer el entrenamiento.
 
 #### Metricas
 
 En la notebook podemos ver que luego de crear y entrenar cada modelo, tambien tenemos para poder revisar algunas metricas de cada uno, por ejemplo:
-`Df dataset. Report: {'NEG': {'precision': 0.0, 'recall': 0.0, 'f1-score': 0.0, 'support': 48}, 'NEU': {'precision': 0.9858613800522514, 'recall': 1.0, 'f1-score': 0.9928803590775422, 'support': 6415}, 'POS': {'precision': 0.0, 'recall': 0.0, 'f1-score': 0.0, 'support': 44}, 'accuracy': 0.9858613800522514, 'macro avg': {'precision': 0.3286204600174171, 'recall': 0.3333333333333333, 'f1-score': 0.3309601196925141, 'support': 6507}, 'weighted avg': {'precision': 0.9719226606785298, 'recall': 0.9858613800522514, 'f1-score': 0.9788424010269607, 'support': 6507}} `
+`{'NEG': {'precision': 0.5517241379310345, 'recall': 0.3333333333333333, 'f1-score': 0.4155844155844156, 'support': 48}, 'NEU': {'precision': 0.9909881914232442, 'recall': 0.99423226812159, 'f1-score': 0.9926075791767178, 'support': 6415}, 'POS': {'precision': 0.40476190476190477, 'recall': 0.38636363636363635, 'f1-score': 0.3953488372093023, 'support': 44}, 'accuracy': 0.9852466574458276, 'macro avg': {'precision': 0.6491580780387278, 'recall': 0.5713097459395199, 'f1-score': 0.6011802773234786, 'support': 6507}, 'weighted avg': {'precision': 0.9837838528369948, 'recall': 0.9852466574458276, 'f1-score': 0.9843124360233451, 'support': 6507}}`
 
-Donde podemos ver que tenemos una [precision](https://en.wikipedia.org/wiki/Precision_and_recall#Precision) general del 98.9% pero un [recall](https://en.wikipedia.org/wiki/Precision_and_recall#Recall) (exhaustividad o sensibilidad) nulas para las clases POS y NEG, lo cual quiere decir que el modelo practicamente predice siempre NEU, lo cual ocurre por el gran volumen de tweets neutrales en comparacion con las demas clases.
+Donde podemos ver que tenemos una [precision](https://en.wikipedia.org/wiki/Precision_and_recall#Precision) general del 64.5% con un [recall](https://en.wikipedia.org/wiki/Precision_and_recall#Recall) (exhaustividad o sensibilidad) menor al 60% en total, solo para la clase NEU siendo esta del 99%, lo cual indica que en su mayoria, el modelo predice el valor neutral y coincide en su mayoria de las veces.
 
 
 En otro caso tenemos:
 `Df 2. Report: {'NEG': {'precision': 0.9, 'recall': 0.8181818181818182, 'f1-score': 0.8571428571428572, 'support': 11}, 'NEU': {'precision': 0.9736070381231672, 'recall': 0.9458689458689459, 'f1-score': 0.9595375722543353, 'support': 351}, 'POS': {'precision': 0.3333333333333333, 'recall': 0.5625, 'f1-score': 0.4186046511627907, 'support': 16}, 'accuracy': 0.9259259259259259, 'macro avg': {'precision': 0.7356467904855002, 'recall': 0.7755169213502547, 'f1-score': 0.7450950268533277, 'support': 378}, 'weighted avg': {'precision': 0.9443635018903835, 'recall': 0.9259259259259259, 'f1-score': 0.9336612002868989, 'support': 378}}`
 
-Tenemos una precision promedio del 73% y valores de recall del 81% para clase NEG, 94% para NEU y 56% para POS. Lo cual nos da a entender de que los clasificadores de los clusters estan mejor distribuidos en comparacion con el clasificador general, y que pueden predecir correcatamente y no solo un valor por defecto.
+Tenemos una precision promedio del 73% y valores de recall del 81% para clase NEG, 94% para NEU y 56% para POS. Lo cual nos da a entender de que los clasificadores de los clusters estan mejor distribuidos en comparacion con el clasificador general, y que pueden predecir correctamente y no solo un valor por defecto.
+
+
+Para poder comparar entre los resultados, se puede ver que si tomamos todos los clasificadores que vienen dados por los vectores obtenidos por el Embedding, estos tienen mayor precision. Es decir, tenemos que:
+* __macro avg precision gral__: 0.5735923326204706
+* __macro avg recall gral__: 0.5168061982717155
+* __macro avg precision por cluster__: 0.6969713581095525
+* __macro avg recall por cluster__: 0.6861866236867549
 
 ## Resultados
 
-TO DO:
+Comienzo aclarando que para obtener los resultados finales, solo pude realizarlo usando los vectores por el metodo de los embeddings, esto por dos razones: La primera por una cuestion de tiempo, y la segunda ya que CountVectorizer sirve para poder traducir documentos a vectores, que tienen un tamaño definido por el vocabulario usado, si agrego un nuevo tweet, este puede incrementar el vocabulario por lo que habria que hacer todo de nuevo a partir del clustering.
 
-- Destacar que es mejor cluster vs dataset vs pysentimiento
-- Concluir, mostrar ejemplos y mostrar cuantitativamente cual anda mejor y con cuanta precision
+Se adquirieron un nuevo conjunto de aproximadamente 1000 tweets para poder evaluar el modelo. Ademas, para identificar si un nuevo tweet coincide en alguno de los topicos, se removieron las palabras "juego" y "calamar" ya que estos siempre van a coincidir y opacan al resto.
+
+
+Para poder tener una medida cuantitativa de la correctitud del modelo y clasificadores entrenados, lo que se hace es para cada uno de los tweets de evaluacion se los pasa por el metodo de prediccion, es decir, primero se limpia el tweet, se toma el valor del vector que lo represente, se busca si el tweet puede acomodarse a alguno de los clusters usando la lista de topicos que identificamos mediante LDA y finalmente, se usa el predictor de dicho cluster para predecir el sentmiento y el predictor general de todo el conjunto inicial de datos. Ademas, de analyzar con Pysentimiento el tweet para luego tener una comparacion con nuestra meta inicial.
+En el caso de que el tweet nuevo no coincida con ninguna de las listas de topicos, se usa el predictor general de todo el dataset.
+```py
+        #en la funcion predict
+        processed_tw = convert_listwords(list_words).strip()
+        clf_cluster = preds[cluster][0]
+        topics.append(topic)
+        cluster_pred.append(clf_cluster.predict([tw_vector]))
+        dataset_pred.append(clf_dataset.predict([tw_vector]))
+        pysent.append(sentiment.output)
+```
+
+Luego de procesar y evaluar todos los nuevos tweets, registro cada vez que coincida el valor predecido con el valor que el analizador de Pysentimiento nos da, para luego poder tener una medida de precision promedio segun si uso los clasificadores de cada cluster o el clasificador general.
+```py
+c_pred, d_pred, tpcs, pysent = predict(eval_tweets, wv_predictors)
+score_general, score_clusters, results = 0, 0, []
+for i in range(len(eval_tweets)):
+    score_general += (d_pred[i][0] == pysent[i])
+    score_clusters += (c_pred[i][0] == pysent[i])
+```
+
+Obteniendo los resultados:
+- __Precision basado en clasificadores separados por Topicos__: 0.4949596774193548 
+- __Precision utilizando el clasificador de todo el corpus__: 0.5524193548387096
+
+Por lo que podemos ver una mejora de aproximadente el 6% del clasificador general con respecto a cada uno de los clasificadores de los clusters. 
+Los resultados son en inesperados, pues imaginaba que los clasificadores de cada cluster iban a ser mas correctos que el clasificiador general, ya que habiamos visto que tenian una Precision y una Recall mayor en comparacion al clasificaor general. 
+
+Creo, hay dos razones por las cuales lo que estabamos esperando no funciona adecuadamente:
+- La mayoria de los nuevos tweets que hablan sobre el Juego del Calamar son neutrales ya que se deben a referencias a la serie mas que opinar sobre ella, y ya que el clasificador general en su mayoria predice NEU esta coincide con los valores dados por Pysentimiento.
+- La forma de asignar los clusters a partir de los topicos puede ser refinada o hace falta seguir refinando la extraccion en la etapa donde se aplica LDA.
+
+
+Es importante ver que la comparacion final se hace contra un valor que nos da el analizador usado y no contra un label que le asigno un ser humano que fue revisando los tweets, por lo que esta comparacion final puede tener sus imprecisiones dadas por el modelo usado, tanto por las imperfecciones que se encuentran en el modelo creado.
+
+
+A continuacion, un par de ejemplos a la lista de resultados:
+1. "twitter esta en el juego del calamar - SENT: ('NEU', 'NEU', 'NEU') - TOPICS: Using dataset configuration, we dont have the topics related"
+1. "@LIDOMRD Que empiece el Juego del Calamar. Toros, eliminados  - SENT: ('NEU', 'NEU', 'NEG') - TOPICS: Using dataset configuration, we dont have the topics related"
+1. "Algo parecido a lo que me paso con el juego del calamar, aunque la serie en si me gusto mucho - SENT: ('NEU', 'NEU', 'NEU') - TOPICS: ['serie', 'netflix', 'temporada', 'creador', 'confirma']"
+1. "¿Veran la segunda parte del juego del Calamar, o en una sola temporada se quemaron todos los cartuchos? - SENT: ('NEU', 'NEU', 'NEG') - TOPICS: ['muneca', 'temporada', 'corea', 'creador', 'sur']"
+
+
+Se pueden ver casos en los que no aun no se tienen los topicos (1° y 2°). Un caso en el que tanto el modelo como los clusters coinciden o en el que ambos fallan en su prediccion.
 
 ### Trabajo futuro
 
 Como funcionalidades que me hubiese gustado abarcar pero por tiempo y fines del trabajo no pude concretar son:
 
--   Identificar Tweets con mayor precision.
+- Mejorar la forma de identificar el cluster a partir de los topicos:
+    
+    Explorar cual era la mejor forma a identificar el cluster para ver que clasificador utilizar.
+
+- Identificar Tweets con mayor precision:
     
     Poder dedicar mas tiempo a lo que respecta a information retrieval.
 
-- Generalizar el modelo para poder buscar sobre diferentes temas de opiniones o tendencias en la red.
+- Generalizar el modelo para poder buscar sobre diferentes temas de opiniones o tendencias en la red:
 
     Hacer crecer para que mas rapidamente se detecten los tweets y se ejecute el modelo.
 
